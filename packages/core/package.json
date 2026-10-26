@@ -1,0 +1,16 @@
+{
+  "name": "@shellmind/core",
+  "version": "0.1.0",
+  "description": "Core domain models, orchestrator lifecycle, and configuration management for ShellMind",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

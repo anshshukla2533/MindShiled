@@ -1,0 +1,30 @@
+{
+  "name": "@shellmind/cli",
+  "version": "0.1.0",
+  "description": "Commander.js terminal copilot CLI binary, interactive prompts, and terminal UI",
+  "type": "module",
+  "bin": {
+    "ai": "./dist/bin.js",
+    "shellmind": "./dist/bin.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "@shellmind/core": "workspace:*",
+    "@shellmind/ai": "workspace:*",
+    "@shellmind/security": "workspace:*",
+    "@shellmind/context": "workspace:*",
+    "@shellmind/executor": "workspace:*",
+    "@shellmind/shell": "workspace:*",
+    "@shellmind/memory": "workspace:*",
+    "@shellmind/plugins": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

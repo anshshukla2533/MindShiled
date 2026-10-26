@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@shellmind/core": [
+        "./packages/core/src/index.ts"
+      ],
+      "@shellmind/security": [
+        "./packages/security/src/index.ts"
+      ],
+      "@shellmind/ai": [
+        "./packages/ai/src/index.ts"
+      ],
+      "@shellmind/context": [
+        "./packages/context/src/index.ts"
+      ],
+      "@shellmind/executor": [
+        "./packages/executor/src/index.ts"
+      ],
+      "@shellmind/shell": [
+        "./packages/shell/src/index.ts"
+      ],
+      "@shellmind/memory": [
+        "./packages/memory/src/index.ts"
+      ],
+      "@shellmind/plugins": [
+        "./packages/plugins/src/index.ts"
+      ],
+      "@shellmind/cli": [
+        "./packages/cli/src/index.ts"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "exclude": ["dist"]
+}

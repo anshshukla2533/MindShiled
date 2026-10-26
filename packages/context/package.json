@@ -1,0 +1,18 @@
+{
+  "name": "@shellmind/context",
+  "version": "0.1.0",
+  "description": "System context engine detecting OS, shell, git, manifests, and tools for ShellMind",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@shellmind/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

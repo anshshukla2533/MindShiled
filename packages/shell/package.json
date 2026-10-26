@@ -1,0 +1,18 @@
+{
+  "name": "@shellmind/shell",
+  "version": "0.1.0",
+  "description": "Cross-shell detection, rc profile integration, alias and completions for ShellMind",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@shellmind/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

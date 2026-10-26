@@ -1,0 +1,6 @@
+{
+  "name": "ShellMind - AI Terminal Copilot",
+  "description": "Production-grade AI-powered terminal copilot that integrates seamlessly with existing shells (Bash, Zsh, Fish, PowerShell, CMD) with security risk analysis, context engine, error diagnosis, and multi-provider LLM support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

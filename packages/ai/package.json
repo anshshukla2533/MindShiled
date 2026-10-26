@@ -1,0 +1,19 @@
+{
+  "name": "@shellmind/ai",
+  "version": "0.1.0",
+  "description": "Multi-provider LLM abstraction (Gemini, OpenAI, Ollama) and prompt engine for ShellMind",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@shellmind/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -28,6 +28,10 @@ import {
   Database,
   History,
   Box,
+  Download,
+  ExternalLink,
+  PackageCheck,
+  Check,
 } from 'lucide-react';
 
 interface RiskAssessment {
@@ -56,7 +60,7 @@ interface TestItem {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    'terminal' | 'architecture' | 'security' | 'context' | 'plugins' | 'config' | 'tests'
+    'terminal' | 'architecture' | 'security' | 'context' | 'plugins' | 'config' | 'tests' | 'download'
   >('terminal');
 
   // Terminal state
@@ -413,6 +417,7 @@ export default function App() {
             { id: 'plugins', label: 'Plugins (7)', icon: Box },
             { id: 'tests', label: 'Tests (15)', icon: CheckCircle2 },
             { id: 'config', label: 'Config & Doctor', icon: Settings },
+            { id: 'download', label: 'Download & SDK', icon: Download },
           ].map(tab => {
             const Icon = tab.icon;
             const isSel = activeTab === tab.id;
@@ -432,6 +437,15 @@ export default function App() {
             );
           })}
         </nav>
+
+        <a
+          href="/download"
+          download="shellmind-v0.1.0.tar.gz"
+          className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white shadow-md shadow-cyan-900/20 transition cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Download v0.1.0</span>
+        </a>
       </header>
 
       {/* Main Content Area */}
@@ -1131,6 +1145,202 @@ export default function App() {
                 </pre>
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB 8: DOWNLOAD & SDK PACKAGE */}
+        {activeTab === 'download' && (
+          <div className="space-y-6">
+            {/* Header Banner */}
+            <div className="p-5 rounded-xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-850 border border-zinc-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                  <Download className="w-5 h-5 text-cyan-400" />
+                  Download ShellMind & Use as a Package
+                </h2>
+                <p className="text-sm text-zinc-400 mt-1 max-w-2xl">
+                  Deploy ShellMind globally to your terminal, or import the modular domain packages directly into your own TypeScript / Node.js applications.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href="/download"
+                  download="shellmind-v0.1.0.tar.gz"
+                  className="px-4 py-2 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/30 transition flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Download v0.1.0 (.tar.gz)
+                </a>
+              </div>
+            </div>
+
+            {/* Distribution Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Standalone Package */}
+              <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-cyan-300 flex items-center gap-2">
+                      <PackageCheck className="w-4 h-4 text-cyan-400" /> Standalone Archive (.tar.gz)
+                    </span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-zinc-400">
+                      34 KB • v0.1.0
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-2 font-sans">
+                    Complete monorepo with all 9 domain packages (`core`, `security`, `ai`, `context`, `executor`, `shell`, `memory`, `plugins`, `cli`).
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+                  <span className="text-xs font-mono text-zinc-400">shellmind-v0.1.0.tar.gz</span>
+                  <a
+                    href="/download"
+                    download="shellmind-v0.1.0.tar.gz"
+                    className="px-3 py-1.5 text-xs font-semibold rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition flex items-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download Archive
+                  </a>
+                </div>
+              </div>
+
+              {/* One-Line Installer */}
+              <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-emerald-300 flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-emerald-400" /> One-Liner Terminal Installer
+                    </span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-emerald-400">
+                      Bash & Zsh Auto
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-2 font-sans">
+                    Installs the binary to `~/.shellmind/bin/ai` and automatically configures your `~/.bashrc` or `~/.zshrc`.
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+                  <span className="text-xs font-mono text-zinc-400">curl install.sh</span>
+                  <a
+                    href="/install.sh"
+                    target="_blank"
+                    className="px-3 py-1.5 text-xs font-semibold rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition flex items-center gap-1.5"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> View Script
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Install Terminal Snippets */}
+            <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-4 font-mono text-xs">
+              <div className="text-sm font-bold font-sans text-zinc-100 flex items-center gap-2">
+                <Command className="w-4 h-4 text-cyan-400" /> Option 1: Quick Install via Terminal
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <span className="text-zinc-400 font-sans block mb-1">A. One-liner install via curl:</span>
+                  <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-emerald-300 flex items-center justify-between">
+                    <code>curl -fsSL {window.location.origin}/install.sh | bash</code>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(`curl -fsSL ${window.location.origin}/install.sh | bash`)}
+                      className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition"
+                      title="Copy"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-zinc-400 font-sans block mb-1">B. Install downloaded tarball locally:</span>
+                  <pre className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 leading-relaxed overflow-x-auto">
+{`# 1. Unpack archive
+tar -xzf shellmind-v0.1.0.tar.gz && cd shellmind
+
+# 2. Install dependencies & compile
+pnpm install && pnpm build
+
+# 3. Link globally
+npm link packages/cli
+
+# 4. Integrate with your shell
+ai install`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+
+            {/* Use as SDK / Package in your Own Application */}
+            <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold font-sans text-zinc-100 flex items-center gap-2">
+                    <FileCode className="w-4 h-4 text-purple-400" /> Option 2: Use as a TypeScript / Node.js SDK
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Import ShellMind domain packages directly into your CLI tools, CI/CD runners, or web backends.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="text-xs font-mono text-zinc-400">Install dependencies in your project:</div>
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-cyan-300 font-mono text-xs flex items-center justify-between">
+                  <code>npm install @shellmind/core @shellmind/security @shellmind/ai @shellmind/context</code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText('npm install @shellmind/core @shellmind/security @shellmind/ai @shellmind/context')}
+                    className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="text-xs font-mono text-zinc-400 pt-2">Full TypeScript integration example:</div>
+                <pre className="p-4 rounded-lg bg-zinc-950 border border-zinc-800 font-mono text-xs text-zinc-300 leading-relaxed overflow-x-auto">
+{`import { ShellMindOrchestrator, ConfigManager } from '@shellmind/core';
+import { SecurityAnalyzer } from '@shellmind/security';
+import { GeminiProvider } from '@shellmind/ai';
+import { ContextCollector } from '@shellmind/context';
+
+async function main() {
+  // 1. Initialize configuration and security rules
+  const configManager = new ConfigManager();
+  const security = new SecurityAnalyzer();
+  const collector = new ContextCollector();
+  const provider = new GeminiProvider();
+
+  // 2. Automatically inspect current OS, shell, and project files
+  const context = await collector.collect();
+
+  // 3. Coordinate AI command planning with zero auto-execution guardrails
+  const orchestrator = new ShellMindOrchestrator(configManager, {
+    securityEngine: security,
+    aiGenerator: {
+      generate: (req) => provider.generateCommand(req),
+    },
+  });
+
+  const plan = await orchestrator.plan({
+    naturalLanguagePrompt: 'create a folder java and inside it create a file thread.java',
+    context,
+  });
+
+  console.log('Command to run:', plan.command);
+  console.log('Risk Level:', plan.risk.level); // SAFE | MEDIUM | HIGH | CRITICAL
+  console.log('Requires Typed Confirmation:', plan.risk.requiresTypedConfirmation);
+
+  // 4. Safely execute ONLY when explicitly confirmed by user
+  const confirmed = true;
+  const result = await orchestrator.executeWithGuardrails(plan.command, confirmed);
+  console.log('Output:', result.stdout);
+}
+
+main();`}
+                </pre>
+              </div>
+            </div>
           </div>
         )}
       </main>

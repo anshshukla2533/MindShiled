@@ -4,30 +4,43 @@
  * Full-stack Express server bridging AI Studio, Vite dev middlewares, and ShellMind core packages.
  */
 
-import express from 'express';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createServer as createViteServer } from 'vite';
+import { spawn } from 'node:child_process';
 
-import { ConfigManager, ShellMindOrchestrator } from './packages/core/src/index.js';
-import { SecurityAnalyzer } from './packages/security/src/index.js';
-import { ContextCollector } from './packages/context/src/index.js';
-import { GeminiProvider } from './packages/ai/src/providers/gemini.js';
-import { AIProviderFactory } from './packages/ai/src/factory.js';
-import { ProcessExecutor } from './packages/executor/src/index.js';
-import { PluginRegistry } from './packages/plugins/src/index.js';
-import { MemoryStore } from './packages/memory/src/index.js';
-import { ShellDetector, ShellInstaller } from './packages/shell/src/index.js';
-import { DoctorCommand } from './packages/cli/src/commands/doctor.js';
-import { runPhase1Tests } from './scripts/test-phase1.js';
+// Auto-bootstrap TSX loader if executed directly via raw 'node server.ts'
+if (typeof process !== 'undefined' && !process.execArgv.some(a => a.includes('tsx')) && !process.env._SHELLMIND_TSX_ACTIVE) {
+  const child = spawn(process.execPath, ['--import', 'tsx', ...process.argv.slice(1)], {
+    stdio: 'inherit',
+    env: { ...process.env, _SHELLMIND_TSX_ACTIVE: '1' },
+  });
+  child.on('exit', (code) => process.exit(code || 0));
+} else {
+  // Main server execution under tsx loader
+  runMainServer();
+}
 
-dotenv.config();
+async function runMainServer() {
+  const express = (await import('express')).default;
+  const dotenv = (await import('dotenv')).default;
+  const path = (await import('path')).default;
+  const { fileURLToPath } = await import('url');
+  const { createServer: createViteServer } = await import('vite');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+  const { ConfigManager, ShellMindOrchestrator } = await import('./packages/core/src/index.js');
+  const { SecurityAnalyzer } = await import('./packages/security/src/index.js');
+  const { ContextCollector } = await import('./packages/context/src/index.js');
+  const { AIProviderFactory } = await import('./packages/ai/src/factory.js');
+  const { ProcessExecutor } = await import('./packages/executor/src/index.js');
+  const { PluginRegistry } = await import('./packages/plugins/src/index.js');
+  const { MemoryStore } = await import('./packages/memory/src/index.js');
+  const { ShellDetector, ShellInstaller } = await import('./packages/shell/src/index.js');
+  const { DoctorCommand } = await import('./packages/cli/src/commands/doctor.js');
+  const { runPhase1Tests } = await import('./scripts/test-phase1.js');
 
-async function startServer() {
+  dotenv.config();
+
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
@@ -221,6 +234,23 @@ async function startServer() {
     }
   });
 
+  // 12. Download Standalone Package (.tar.gz)
+  app.get(['/download', '/api/download/package', '/download/shellmind.tar.gz'], (_req, res) => {
+    const archivePath = path.resolve(__dirname, 'public', 'shellmind-v0.1.0.tar.gz');
+    res.download(archivePath, 'shellmind-v0.1.0.tar.gz', (err) => {
+      if (err) {
+        console.error('Download error:', err);
+      }
+    });
+  });
+
+  // 13. One-Liner Install Script
+  app.get(['/install.sh', '/api/install.sh'], (_req, res) => {
+    const scriptPath = path.resolve(__dirname, 'public', 'install.sh');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.sendFile(scriptPath);
+  });
+
   // Serve Vite in development or static dist in production
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
@@ -239,8 +269,3 @@ async function startServer() {
     console.log(`\n🚀 ShellMind Server running on http://0.0.0.0:${PORT}`);
   });
 }
-
-startServer().catch(err => {
-  console.error('Failed to start ShellMind server:', err);
-  process.exit(1);
-});

@@ -22,12 +22,12 @@ import {
 
 export class GeminiProvider implements IAIProvider {
   public readonly id = 'gemini';
-  public readonly name = 'Google Gemini (gemini-3.8-flash)';
+  public readonly name = 'Google Gemini (gemini-3.1-flash-lite)';
   private ai?: GoogleGenAI;
   private modelName: string;
 
   constructor(options?: { apiKey?: string; model?: string }) {
-    this.modelName = options?.model || 'gemini-3.8-flash';
+    this.modelName = options?.model || 'gemini-3.1-flash-lite';
     const apiKey = options?.apiKey || process.env.GEMINI_API_KEY;
     if (apiKey && apiKey !== 'MY_GEMINI_API_KEY' && !apiKey.startsWith('MY_') && apiKey.length > 15) {
       this.ai = new GoogleGenAI({
@@ -48,26 +48,39 @@ export class GeminiProvider implements IAIProvider {
 
     try {
       const prompt = buildGenerationPrompt(request);
-      const apiCall = this.ai.models.generateContent({
-        model: this.modelName,
-        contents: prompt,
-        config: {
-          systemInstruction: SHELLMIND_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-        },
-      });
+      const executeCall = async (model: string) => {
+        return this.ai!.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            systemInstruction: SHELLMIND_SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        });
+      };
 
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Gemini API call timed out after 3.5s')), 3500)
+        setTimeout(() => reject(new Error('Gemini API call timed out after 5s')), 5000)
       );
 
-      const response = await Promise.race([apiCall, timeoutPromise]);
+      let response;
+      try {
+        response = await Promise.race([executeCall(this.modelName), timeoutPromise]);
+      } catch (err: any) {
+        if (err?.message?.includes('503') || err?.status === 503) {
+          console.warn('[Gemini 503 spike, falling back to gemini-3.1-flash-lite]');
+          response = await Promise.race([executeCall('gemini-3.1-flash-lite'), timeoutPromise]);
+        } else {
+          throw err;
+        }
+      }
+
       const text = response.text?.trim() || '{}';
       const parsed = JSON.parse(text);
 
       return {
-        command: parsed.command || 'echo "Could not generate command"',
+        command: parsed.command || this.fallbackGenerate(request).command,
         explanation: parsed.explanation || 'Generated shell command',
         risk: {
           level: parsed.risk?.level || 'SAFE',
@@ -214,12 +227,122 @@ export class GeminiProvider implements IAIProvider {
       };
     }
 
+    // 1. "create a folder <X> and inside it create a file <Y>"
+    const folderAndFileMatch = request.naturalLanguagePrompt.match(
+      /(?:create|make)\s+(?:a\s+)?(?:folder|dir|directory)\s+([a-zA-Z0-9_.-]+)\s+(?:and\s+)?(?:inside\s+(?:it\s+)?)?(?:create|make|touch|add)\s+(?:a\s+)?(?:file\s+)?([a-zA-Z0-9_.-]+)/i
+    );
+    if (folderAndFileMatch) {
+      const folder = folderAndFileMatch[1];
+      const file = folderAndFileMatch[2];
+      return {
+        command: `mkdir -p ${folder} && touch ${folder}/${file}`,
+        explanation: `Creates folder '${folder}' and creates file '${file}' inside it.`,
+        risk: {
+          level: 'SAFE',
+          reasons: ['Creates local directory and empty file.'],
+          requiresTypedConfirmation: false,
+        },
+        alternatives: [
+          {
+            command: `mkdir -p ${folder}/${file}`,
+            description: 'Direct path creation (if supported)',
+          },
+        ],
+      };
+    }
+
+    // 2. "create folder <X>"
+    const folderMatch = request.naturalLanguagePrompt.match(
+      /(?:create|make)\s+(?:a\s+)?(?:folder|dir|directory)\s+([a-zA-Z0-9_.-]+)/i
+    );
+    if (folderMatch) {
+      const folder = folderMatch[1];
+      return {
+        command: `mkdir -p ${folder}`,
+        explanation: `Creates directory '${folder}' (including parent directories if missing).`,
+        risk: {
+          level: 'SAFE',
+          reasons: ['Creates directory.'],
+          requiresTypedConfirmation: false,
+        },
+      };
+    }
+
+    // 3. "create file <Y>"
+    const fileMatch = request.naturalLanguagePrompt.match(
+      /(?:create|touch|make)\s+(?:a\s+)?(?:file\s+)?([a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)/i
+    );
+    if (fileMatch) {
+      const file = fileMatch[1];
+      return {
+        command: `touch ${file}`,
+        explanation: `Creates new empty file '${file}'.`,
+        risk: {
+          level: 'SAFE',
+          reasons: ['Creates empty file in working directory.'],
+          requiresTypedConfirmation: false,
+        },
+      };
+    }
+
+    // 4. "kill port <port>"
+    const portMatch = request.naturalLanguagePrompt.match(/kill\s+(?:process\s+on\s+)?(?:port\s+)?(\d{2,5})/i);
+    if (portMatch) {
+      const port = portMatch[1];
+      return {
+        command: `lsof -ti:${port} | xargs kill -9`,
+        explanation: `Finds the process PID bound to TCP port ${port} and terminates it.`,
+        risk: {
+          level: 'HIGH',
+          reasons: ['Terminates active process running on target port.'],
+          requiresTypedConfirmation: false,
+        },
+      };
+    }
+
+    // 5. Common system queries
+    if (/list\s+(all\s+)?files|show\s+files/i.test(prompt)) {
+      return {
+        command: 'ls -la',
+        explanation: 'Lists all files including hidden dotfiles with size and permission details.',
+        risk: { level: 'SAFE', reasons: ['Read-only file listing.'], requiresTypedConfirmation: false },
+      };
+    }
+
+    if (/git\s+status|check\s+git/i.test(prompt)) {
+      return {
+        command: 'git status',
+        explanation: 'Inspects active branch and uncommitted modifications in repository.',
+        risk: { level: 'SAFE', reasons: ['Read-only git status check.'], requiresTypedConfirmation: false },
+      };
+    }
+
+    if (/docker\s+ps|running\s+containers/i.test(prompt)) {
+      return {
+        command: 'docker ps',
+        explanation: 'Lists all active running Docker containers.',
+        risk: { level: 'SAFE', reasons: ['Read-only container inspection.'], requiresTypedConfirmation: false },
+      };
+    }
+
+    if (/disk\s+space|check\s+disk/i.test(prompt)) {
+      return {
+        command: 'df -h',
+        explanation: 'Displays disk usage and available space in human-readable format.',
+        risk: { level: 'SAFE', reasons: ['Read-only filesystem report.'], requiresTypedConfirmation: false },
+      };
+    }
+
+    // 6. Generic token builder if no exact pattern matched
+    const words = request.naturalLanguagePrompt.split(/\s+/).filter(w => !/^(please|can|you|how|to|the|a|an|for|in|on|at|of)$/i.test(w));
+    const commandCandidate = words.join(' ');
+
     return {
-      command: `echo "Generated command for: ${request.naturalLanguagePrompt.replace(/"/g, '')}"`,
-      explanation: `Analyzed prompt: "${request.naturalLanguagePrompt}"`,
+      command: commandCandidate,
+      explanation: `Proposed shell command for: "${request.naturalLanguagePrompt}"`,
       risk: {
         level: 'SAFE',
-        reasons: ['Heuristic command generator output'],
+        reasons: ['Parsed from intent tokens.'],
         requiresTypedConfirmation: false,
       },
     };

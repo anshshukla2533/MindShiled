@@ -1,30 +1,26 @@
 {
-  "name": "@shellmind/cli",
+  "name": "shellmind",
   "version": "0.1.0",
-  "description": "Commander.js terminal copilot CLI binary, interactive prompts, and terminal UI",
+  "description": "ShellMind — AI Terminal Copilot with Zero Auto-Execution Guardrails",
   "type": "module",
   "bin": {
     "ai": "./dist/bin.js",
     "shellmind": "./dist/bin.js"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/bin.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "esbuild src/bin.ts --bundle --platform=node --format=esm --tsconfig=../../tsconfig.json --outfile=dist/bin.js --external:@google/genai --external:commander",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "commander": "^12.0.0",
-    "@shellmind/core": "workspace:*",
-    "@shellmind/ai": "workspace:*",
-    "@shellmind/security": "workspace:*",
-    "@shellmind/context": "workspace:*",
-    "@shellmind/executor": "workspace:*",
-    "@shellmind/shell": "workspace:*",
-    "@shellmind/memory": "workspace:*",
-    "@shellmind/plugins": "workspace:*"
+    "@google/genai": "^2.4.0",
+    "commander": "^12.0.0"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "typescript": "^5.0.0"
   }
 }

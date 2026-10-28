@@ -1238,11 +1238,25 @@ export default function App() {
                 <Command className="w-4 h-4 text-cyan-400" /> Option 1: Quick Install via Terminal
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <span className="text-zinc-400 font-sans block mb-1">A. One-liner install via curl:</span>
+                  <span className="text-zinc-400 font-sans block mb-1">A. Global CLI install via npm (one command):</span>
+                  <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-cyan-300 flex items-center justify-between">
+                    <code>npm install -g {typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-awthkhsjwjp4gmwpmeou6r-670799253577.asia-east1.run.app'}/packages/shellmind-0.1.0.tgz</code>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(`npm install -g ${window.location.origin}/packages/shellmind-0.1.0.tgz`)}
+                      className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition"
+                      title="Copy"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-zinc-400 font-sans block mb-1">B. One-liner install via curl (Bash & Zsh auto-config):</span>
                   <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-emerald-300 flex items-center justify-between">
-                    <code>curl -fsSL {window.location.origin}/install.sh | bash</code>
+                    <code>curl -fsSL {typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-awthkhsjwjp4gmwpmeou6r-670799253577.asia-east1.run.app'}/install.sh | bash</code>
                     <button
                       onClick={() => navigator.clipboard.writeText(`curl -fsSL ${window.location.origin}/install.sh | bash`)}
                       className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition"
@@ -1254,20 +1268,17 @@ export default function App() {
                 </div>
 
                 <div>
-                  <span className="text-zinc-400 font-sans block mb-1">B. Install downloaded tarball locally:</span>
-                  <pre className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 leading-relaxed overflow-x-auto">
-{`# 1. Unpack archive
-tar -xzf shellmind-v0.1.0.tar.gz && cd shellmind
-
-# 2. Install dependencies & compile
-pnpm install && pnpm build
-
-# 3. Link globally
-npm link packages/cli
-
-# 4. Integrate with your shell
-ai install`}
-                  </pre>
+                  <span className="text-zinc-400 font-sans block mb-1">C. Install from your GitHub repository:</span>
+                  <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 flex items-center justify-between">
+                    <code>npm install -g git+https://github.com/anshshukla2533/MindShiled.git</code>
+                    <button
+                      onClick={() => navigator.clipboard.writeText('npm install -g git+https://github.com/anshshukla2533/MindShiled.git')}
+                      className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition"
+                      title="Copy"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1286,11 +1297,11 @@ ai install`}
               </div>
 
               <div className="space-y-3">
-                <div className="text-xs font-mono text-zinc-400">Install dependencies in your project:</div>
+                <div className="text-xs font-mono text-zinc-400">Install standalone SDK package into your project:</div>
                 <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-cyan-300 font-mono text-xs flex items-center justify-between">
-                  <code>npm install @shellmind/core @shellmind/security @shellmind/ai @shellmind/context</code>
+                  <code>npm install {typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-awthkhsjwjp4gmwpmeou6r-670799253577.asia-east1.run.app'}/packages/shellmind-0.1.0.tgz</code>
                   <button
-                    onClick={() => navigator.clipboard.writeText('npm install @shellmind/core @shellmind/security @shellmind/ai @shellmind/context')}
+                    onClick={() => navigator.clipboard.writeText(`npm install ${window.location.origin}/packages/shellmind-0.1.0.tgz`)}
                     className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition"
                   >
                     <Copy className="w-3.5 h-3.5" />

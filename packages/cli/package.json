@@ -1,6 +1,6 @@
 {
-  "name": "shellmind",
-  "version": "0.1.0",
+  "name": "@anshshukla2533/shellmind",
+  "version": "0.1.2",
   "description": "ShellMind — AI Terminal Copilot with Zero Auto-Execution Guardrails",
   "type": "module",
   "bin": {
@@ -8,12 +8,33 @@
     "shellmind": "./dist/bin.js"
   },
   "main": "dist/bin.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Ansh Shukla <anshshuklavg@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anshshukla2533/MindShiled.git"
+  },
+  "keywords": [
+    "ai",
+    "terminal",
+    "cli",
+    "copilot",
+    "shell",
+    "gemini",
+    "developer-tools",
+    "devops"
+  ],
+  "license": "Apache-2.0",
   "scripts": {
     "build": "esbuild src/bin.ts --bundle --platform=node --format=esm --tsconfig=../../tsconfig.json --outfile=dist/bin.js --external:@google/genai --external:commander",
-    "clean": "rm -rf dist"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

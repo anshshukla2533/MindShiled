@@ -4,6 +4,7 @@
  */
 
 import { Command } from 'commander';
+import * as readline from 'node:readline';
 import { ConfigManager, ShellMindOrchestrator } from '@shellmind/core';
 import { ContextCollector } from '@shellmind/context';
 import { SecurityAnalyzer } from '@shellmind/security';
@@ -12,6 +13,19 @@ import { ProcessExecutor } from '@shellmind/executor';
 import { ShellInstaller } from '@shellmind/shell';
 import { DoctorCommand } from './commands/doctor.js';
 import { colors, formatCommandCard, badge } from './ui/colors.js';
+
+function askQuestion(query: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(query, (ans) => {
+      rl.close();
+      resolve(ans.trim());
+    });
+  });
+}
 
 export function createCLI(): Command {
   const program = new Command();
@@ -22,7 +36,7 @@ export function createCLI(): Command {
   program
     .name('ai')
     .description('ShellMind — AI Terminal Copilot (Seamless Shell Integration)')
-    .version('0.1.0');
+    .version('0.1.2');
 
   // Natural language command generation (Default command)
   program
@@ -67,7 +81,53 @@ export function createCLI(): Command {
         });
       }
 
-      console.log(`\n${colors.yellow}Proceed?${colors.reset} [Y] Execute  [N] Cancel  [E] Edit`);
+      // Interactive prompt execution
+      const rawAnswer = await askQuestion(
+        `\n${colors.yellow}Proceed?${colors.reset} [Y] Execute  [N] Cancel  [E] Edit: `
+      );
+      const answer = rawAnswer.toLowerCase();
+
+      if (answer === 'y' || answer === 'yes' || answer === '') {
+        let typedToken: string | undefined = undefined;
+        if (plan.risk.requiresTypedConfirmation) {
+          console.log(
+            `\n${colors.red}${colors.bold}CRITICAL SAFETY GATE:${colors.reset} This command can damage system or disks.`
+          );
+          typedToken = await askQuestion(`Type "${colors.bold}CONFIRM${colors.reset}" to proceed: `);
+        }
+
+        console.log(`\n${colors.cyan}●${colors.reset} Executing: ${colors.bold}${plan.command}${colors.reset}\n`);
+
+        try {
+          const res = await orchestrator.executeWithGuardrails(plan.command, true, typedToken);
+          if (res.stdout) console.log(res.stdout);
+          if (res.stderr) console.error(res.stderr);
+          if (res.exitCode === 0) {
+            console.log(`\n${colors.green}✔ Finished successfully (exit 0)${colors.reset}\n`);
+          } else {
+            console.log(`\n${colors.red}✖ Command exited with code ${res.exitCode}${colors.reset}\n`);
+          }
+        } catch (err: any) {
+          console.error(`\n${colors.red}✖ Execution halted:${colors.reset} ${err.message}\n`);
+        }
+      } else if (answer === 'e' || answer === 'edit') {
+        const editedCmd = (await askQuestion(`Edit command [${plan.command}]: `)) || plan.command;
+        console.log(`\n${colors.cyan}●${colors.reset} Executing: ${colors.bold}${editedCmd}${colors.reset}\n`);
+        try {
+          const res = await orchestrator.executeWithGuardrails(editedCmd, true);
+          if (res.stdout) console.log(res.stdout);
+          if (res.stderr) console.error(res.stderr);
+          if (res.exitCode === 0) {
+            console.log(`\n${colors.green}✔ Finished successfully (exit 0)${colors.reset}\n`);
+          } else {
+            console.log(`\n${colors.red}✖ Command exited with code ${res.exitCode}${colors.reset}\n`);
+          }
+        } catch (err: any) {
+          console.error(`\n${colors.red}✖ Execution halted:${colors.reset} ${err.message}\n`);
+        }
+      } else {
+        console.log(`\n${colors.dim}✖ Cancelled.${colors.reset}\n`);
+      }
     });
 
   // Explain command
@@ -104,10 +164,39 @@ export function createCLI(): Command {
       console.log(`Risk Assessment: ${badge(analysis.level, analysis.level)}`);
       analysis.reasons.forEach((r: string) => console.log(`  - ${r}`));
 
+      let typedToken: string | undefined = undefined;
       if (analysis.level === 'CRITICAL') {
-        console.log(`\n${colors.red}${colors.bold}CRITICAL COMMAND:${colors.reset} Type "CONFIRM" to proceed.`);
+        console.log(`\n${colors.red}${colors.bold}CRITICAL COMMAND:${colors.reset}`);
+        typedToken = await askQuestion(`Type "${colors.bold}CONFIRM${colors.reset}" to proceed: `);
+        if (typedToken !== 'CONFIRM') {
+          console.log(`\n${colors.dim}✖ Cancelled (token mismatch).${colors.reset}\n`);
+          return;
+        }
       } else {
-        console.log(`\nExecute? [Y/n]`);
+        const confirm = (await askQuestion(`\nExecute? [Y/n]: `)).toLowerCase();
+        if (confirm !== 'y' && confirm !== 'yes' && confirm !== '') {
+          console.log(`\n${colors.dim}✖ Cancelled.${colors.reset}\n`);
+          return;
+        }
+      }
+
+      console.log(`\n${colors.cyan}●${colors.reset} Executing: ${colors.bold}${cmd}${colors.reset}\n`);
+      const orchestrator = new ShellMindOrchestrator(configManager, {
+        securityEngine: securityAnalyzer,
+        executionEngine: executor,
+      });
+
+      try {
+        const res = await orchestrator.executeWithGuardrails(cmd, true, typedToken);
+        if (res.stdout) console.log(res.stdout);
+        if (res.stderr) console.error(res.stderr);
+        if (res.exitCode === 0) {
+          console.log(`\n${colors.green}✔ Finished successfully (exit 0)${colors.reset}\n`);
+        } else {
+          console.log(`\n${colors.red}✖ Command exited with code ${res.exitCode}${colors.reset}\n`);
+        }
+      } catch (err: any) {
+        console.error(`\n${colors.red}✖ Execution failed:${colors.reset} ${err.message}\n`);
       }
     });
 

@@ -227,15 +227,20 @@ export class GeminiProvider implements IAIProvider {
       };
     }
 
+    const isWinCmd = request.context?.os?.platform === 'win32' && request.context?.shell === 'cmd';
+
     // 1. "create a folder <X> and inside it create a file <Y>"
     const folderAndFileMatch = request.naturalLanguagePrompt.match(
-      /(?:create|make)\s+(?:a\s+)?(?:folder|dir|directory)\s+([a-zA-Z0-9_.-]+)\s+(?:and\s+)?(?:inside\s+(?:it\s+)?)?(?:create|make|touch|add)\s+(?:a\s+)?(?:file\s+)?([a-zA-Z0-9_.-]+)/i
+      /(?:create|make)\s+(?:a\s+)?(?:folder|dir|directory)\s+(?:named|with\s+(?:the\s+)?name|called\s+)?([a-zA-Z0-9_.-]+)\s+(?:and\s+)?(?:inside\s+(?:it\s+)?)?(?:create|make|touch|add)\s+(?:a\s+)?(?:file\s+)?(?:named|with\s+(?:the\s+)?name|called\s+)?([a-zA-Z0-9_.-]+)/i
     );
     if (folderAndFileMatch) {
       const folder = folderAndFileMatch[1];
       const file = folderAndFileMatch[2];
+      const cmd = isWinCmd
+        ? `mkdir ${folder} && type nul > ${folder}\\${file}`
+        : `mkdir -p ${folder} && touch ${folder}/${file}`;
       return {
-        command: `mkdir -p ${folder} && touch ${folder}/${file}`,
+        command: cmd,
         explanation: `Creates folder '${folder}' and creates file '${file}' inside it.`,
         risk: {
           level: 'SAFE',
@@ -244,22 +249,23 @@ export class GeminiProvider implements IAIProvider {
         },
         alternatives: [
           {
-            command: `mkdir -p ${folder}/${file}`,
+            command: isWinCmd ? `mkdir ${folder}\\${file}` : `mkdir -p ${folder}/${file}`,
             description: 'Direct path creation (if supported)',
           },
         ],
       };
     }
 
-    // 2. "create folder <X>"
+    // 2. "create folder [with name | called | named] <X>"
     const folderMatch = request.naturalLanguagePrompt.match(
-      /(?:create|make)\s+(?:a\s+)?(?:folder|dir|directory)\s+([a-zA-Z0-9_.-]+)/i
+      /(?:create|make)\s+(?:a\s+)?(?:folder|dir|directory)\s+(?:named|with\s+(?:the\s+)?name|called\s+)?\s*([a-zA-Z0-9_.-]+)/i
     );
     if (folderMatch) {
       const folder = folderMatch[1];
+      const cmd = isWinCmd ? `mkdir ${folder}` : `mkdir -p ${folder}`;
       return {
-        command: `mkdir -p ${folder}`,
-        explanation: `Creates directory '${folder}' (including parent directories if missing).`,
+        command: cmd,
+        explanation: `Creates directory '${folder}'.`,
         risk: {
           level: 'SAFE',
           reasons: ['Creates directory.'],

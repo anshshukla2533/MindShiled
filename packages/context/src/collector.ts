@@ -82,16 +82,18 @@ export class ContextCollector {
         try {
           const gitDir = path.join(cwd, '.git');
           if (fs.existsSync(gitDir)) {
-            const branch = cp.execSync('git rev-parse --abbrev-ref HEAD 2>/dev/null', {
+            const branch = cp.execSync('git rev-parse --abbrev-ref HEAD', {
               cwd,
               encoding: 'utf-8',
               timeout: 1000,
+              stdio: ['ignore', 'pipe', 'ignore'],
             }).trim();
 
-            const status = cp.execSync('git status --porcelain 2>/dev/null', {
+            const status = cp.execSync('git status --porcelain', {
               cwd,
               encoding: 'utf-8',
               timeout: 1000,
+              stdio: ['ignore', 'pipe', 'ignore'],
             }).trim();
 
             gitInfo = {
@@ -113,9 +115,10 @@ export class ContextCollector {
       const toolBinaries = ['git', 'docker', 'python3', 'pnpm', 'aws', 'kubectl', 'terraform'];
       for (const tool of toolBinaries) {
         try {
-          const out = cp.execSync(`${tool} --version 2>/dev/null`, {
+          const out = cp.execSync(`${tool} --version`, {
             encoding: 'utf-8',
             timeout: 500,
+            stdio: ['ignore', 'pipe', 'ignore'],
           }).trim();
           if (out) {
             (tools as any)[tool] = out.split('\n')[0]?.substring(0, 40);

@@ -251,6 +251,12 @@ async function runMainServer() {
     res.sendFile(scriptPath);
   });
 
+  // 14. Direct NPM Release Tarball
+  app.get(['/download/shellmind-ai.tgz', '/download/shellmind-ai-0.1.0.tgz'], (_req, res) => {
+    const archivePath = path.resolve(__dirname, 'public', 'packages', 'shellmind-ai-0.1.0.tgz');
+    res.download(archivePath, 'shellmind-ai-0.1.0.tgz');
+  });
+
   // Serve Vite in development or static dist in production
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
